@@ -9,8 +9,8 @@ const POLL_MS = 2500
 
 const snapshot = atom(
   { plugin: 'android-devices', key: 'snapshot' } as const,
-  { devices: [] } as DeviceSnapshot,
-  { shape: 'snapshot-1' },
+  { devices: [], loaded: false } as DeviceSnapshot,
+  { shape: 'snapshot-2' },
 )
 
 // A hung adb can outlast the interval; one poll at a time.
@@ -58,7 +58,7 @@ export const register: Register = on => {
   // the devices on a row of their own under it.
   on('ui.render', { component: 'PromptHint' }, async ($, e, next) => {
     const line = await next(e)
-    const { devices, error } = await read($, snapshot)
+    const { devices, loaded, error } = await read($, snapshot)
     const { Box, Text } = $.ui.resolve(e)
     const list = sorted(devices)
 
@@ -72,12 +72,18 @@ export const register: Register = on => {
               {error}
             </Text>
           )}
-          {!error && list.length === 0 && (
+          {!error && !loaded && (
+            <Text dimColor maxLines={1}>
+              读取中…
+            </Text>
+          )}
+          {!error && loaded && list.length === 0 && (
             <Text dimColor maxLines={1}>
               未连接 Android 设备
             </Text>
           )}
           {!error &&
+            loaded &&
             list.slice(0, 3).map((device, index) => {
               const look = LOOKS[device.state]
               const color = look?.color ?? 'gray'
@@ -100,7 +106,7 @@ export const register: Register = on => {
                 </Box>
               )
             })}
-          {!error && list.length > 3 && (
+          {!error && loaded && list.length > 3 && (
             <Text dimColor maxLines={1}>
               {'  '}+{list.length - 3}
             </Text>
@@ -155,14 +161,22 @@ async function refresh($: EngineInterface): Promise<void> {
     const { stdout } = await $.process.run(['adb', 'devices', '-l'], {
       timeoutMs: 5000,
     })
-    const devices = await enrich($, parseDevices(stdout))
+    // Draw the list at once; brand and model land a moment later.
+    const parsed = parseDevices(stdout)
     await update($, snapshot, value => ({
       ...value,
-      devices,
+      devices: parsed,
+      loaded: true,
       error: undefined,
     }))
+    $.ui.invalidate('ui.render')
+
+    const devices = await enrich($, parsed)
+    await update($, snapshot, value => ({ ...value, devices }))
+    $.ui.invalidate('ui.render')
   } catch (error) {
     await update($, snapshot, value => ({ ...value, error: describe(error) }))
+    $.ui.invalidate('ui.render')
   }
 }
 

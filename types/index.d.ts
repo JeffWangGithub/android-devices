@@ -7,6 +7,7 @@ export type AndroidDevice = {
 
 export type DeviceSnapshot = {
   devices: AndroidDevice[]
+  loaded: boolean
   error?: string
 }
 

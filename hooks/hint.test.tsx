@@ -21,6 +21,7 @@ const mocks = (on: any, run: any) => {
   on('session.start', (_: any, e: any) => ({ cwd: e.cwd }))
   on('clock.every', () => ({ value: undefined }))
   on('ui.close', () => ({ value: undefined }))
+  on('ui.invalidate', () => ({ value: undefined }))
   on('process.run', run)
 }
 
