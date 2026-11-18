@@ -1,5 +1,13 @@
 {
   "name": "android-devices",
-  "owner": { "name": "JeffWangGithub" },
-  "plugins": [{ "name": "android-devices", "source": "./" }]
+  "owner": {
+    "name": "JeffWangGithub"
+  },
+  "plugins": [
+    {
+      "name": "android-devices",
+      "source": "./"
+    }
+  ],
+  "description": "Show connected Android devices under the Claude Code prompt"
 }
