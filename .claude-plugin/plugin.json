@@ -1,0 +1,8 @@
+{
+  "name": "android-devices",
+  "version": "0.1.0",
+  "description": "Show connected Android devices under the Claude Code prompt",
+  "author": { "name": "JeffWangGithub" },
+  "license": "MIT",
+  "types": "./types/index.d.ts"
+}

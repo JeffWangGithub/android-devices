@@ -1,0 +1,5 @@
+{
+  "name": "android-devices",
+  "owner": { "name": "JeffWangGithub" },
+  "plugins": [{ "name": "android-devices", "source": "./" }]
+}
