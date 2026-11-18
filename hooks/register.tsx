@@ -39,7 +39,7 @@ export const register: Register = on => {
       name: NAME,
       description: '显示已连接的 Android 设备',
     })
-    await refresh($)
+    await poll($)
     $.clock.every(POLL_MS, () => poll($))
 
     return next(e)
@@ -57,8 +57,10 @@ export const register: Register = on => {
   // The prompt hint line is the lowest one: keep the engine's line and draw
   // the devices on a row of their own under it.
   on('ui.render', { component: 'PromptHint' }, async ($, e, next) => {
-    const line = await next(e)
     const { devices, loaded, error } = await read($, snapshot)
+    // The hint can draw before session.start runs; start reading adb here.
+    if (!loaded) void poll($)
+    const line = await next(e)
     const { Box, Text } = $.ui.resolve(e)
     const list = sorted(devices)
 

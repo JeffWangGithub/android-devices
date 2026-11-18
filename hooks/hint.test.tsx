@@ -84,3 +84,23 @@ test('shows why adb failed', async ($, on) => {
   expect(row?.text).toContain('adb not found')
   await ui.unmount()
 })
+
+test('starts reading from the first hint draw', async ($, on) => {
+  let calls = 0
+  mocks(on, () => {
+    calls += 1
+    return {
+      value: {
+        exitCode: 0,
+        stdout: 'List of devices attached\n',
+        stderr: '',
+        isStdoutTruncated: false,
+        isStderrTruncated: false,
+      },
+    }
+  })
+
+  const ui = await $.ui.mount(HINT)
+  expect(calls).toBeGreaterThan(0)
+  await ui.unmount()
+})
