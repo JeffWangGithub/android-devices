@@ -1,8 +1,8 @@
 # android-devices
 
-在 Claude Code 输入框最下面提示行（`bypass permissions on (shift+tab to cycle)`）的下方，单独一行显示当前连接的 Android 设备：状态圆点、品牌、型号、序列号和连接状态，每 2.5 秒刷新。
+在 Claude Code 输入框上方的条带（`AbovePrompt`）里显示当前连接的 Android 设备：状态圆点、品牌、型号、序列号和连接状态，每 2.5 秒刷新；每台在线设备后面跟一个「截图」按钮，点一下就能截屏。
 
-Show connected Android devices on their own row under the Claude Code prompt.
+Show connected Android devices in the band above the Claude Code prompt, with a one-click screenshot button per device.
 
 ## 安装
 
@@ -21,13 +21,19 @@ claude --plugin-dir /path/to/android-devices
 ## 用法
 
 - 安装后自动显示，无需操作。
+- 点击设备后面的「截图」按钮即可截屏，路径会打印成一条系统提示。
 - 输入 `/android-devices` 可把完整设备列表（序列号、品牌、型号、状态）打印到对话里。
+- 输入 `/android-devices-shot [序列号]` 通过 adb 截屏，保存为 PNG，并打印文件路径（Claude 可直接用 Read 查看）。
+- 输入 `/android-devices-record [序列号] [秒数]` 通过 adb 录屏，默认 10 秒，最长 180 秒，保存为 MP4。
+- 截屏和录屏默认落在 `~/.claude/android-devices/`。
+- 只有一台在线设备时序列号可省略；多台时命令会提示带上序列号。
 - 最多显示 3 台，更多时追加 `+N`。
 
 ## 前置条件
 
 - 本机安装 `adb`（Android Platform Tools），并在 `PATH` 中。
 - 设备开启 USB 调试；首次连接时在手机上允许调试授权。
+- 录屏依赖设备自带的 `screenrecord`；部分定制 ROM 会移除它或让它崩溃（报 `not found` / `Segmentation fault`），此时录屏命令会直接报错，截屏不受影响。
 
 ## 状态颜色
 

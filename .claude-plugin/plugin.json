@@ -1,7 +1,7 @@
 {
   "name": "android-devices",
-  "version": "0.1.3",
-  "description": "Show connected Android devices under the Claude Code prompt",
+  "version": "0.1.4",
+  "description": "Show connected Android devices, take adb screenshots and screen recordings from Claude Code",
   "author": { "name": "JeffWangGithub" },
   "license": "MIT",
   "types": "./types/index.d.ts"

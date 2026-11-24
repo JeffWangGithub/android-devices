@@ -4,14 +4,18 @@ const SAMPLE = `List of devices attached
 SWHUIJB6PREEV46X       device usb:1 product:PGKM10 model:PGKM10 transport_id:7
 `
 
-const HINT = {
+const BAND = {
   plugin: 'android-devices',
-  component: 'PromptHint',
+  component: 'AbovePrompt',
   surface: 'terminal',
   props: {
-    isDraft: false,
+    hasSurvey: false,
+    isCollapsed: false,
     isWorking: false,
-    hint: 'bypass permissions on (shift+tab to cycle)',
+    maxRows: 6,
+    bodyColumns: 120,
+    scroll: { offset: 0, bodyRows: 5 },
+    view: {},
   },
 } as const
 
@@ -22,10 +26,13 @@ const mocks = (on: any, run: any) => {
   on('clock.every', () => ({ value: undefined }))
   on('ui.close', () => ({ value: undefined }))
   on('ui.invalidate', () => ({ value: undefined }))
+  on('ui.toast', () => ({ value: undefined }))
+  on('ui.log', () => ({ value: undefined }))
+  on('env.get', () => ({ value: '/home/tester' }))
   on('process.run', run)
 }
 
-test('draws devices on their own row under the hint line', async ($, on) => {
+test('draws devices in the band above the prompt', async ($, on) => {
   mocks(on, (_: any, e: any) => {
     const prop = e.argv.at(-1)
     const stdout = e.argv.includes('getprop')
@@ -45,7 +52,7 @@ test('draws devices on their own row under the hint line', async ($, on) => {
   })
   await $.session.start({ cwd: '/', surface: 'terminal', isInteractive: true })
 
-  const ui = await $.ui.mount(HINT)
+  const ui = await $.ui.mount(BAND)
   expect(
     (await ui.find({ type: 'Text', text: /OnePlus PGKM10/ }))?.text,
   ).toBe('OnePlus PGKM10')
@@ -68,7 +75,7 @@ test('says so when no device is connected', async ($, on) => {
   }))
   await $.session.start({ cwd: '/', surface: 'terminal', isInteractive: true })
 
-  const ui = await $.ui.mount(HINT)
+  const ui = await $.ui.mount(BAND)
   expect(
     (await ui.find({ type: 'Text', text: /未连接 Android 设备/ }))?.text,
   ).toContain('未连接 Android 设备')
@@ -79,13 +86,13 @@ test('shows why adb failed', async ($, on) => {
   mocks(on, () => ({ deny: 'adb not found' }))
   await $.session.start({ cwd: '/', surface: 'terminal', isInteractive: true })
 
-  const ui = await $.ui.mount(HINT)
+  const ui = await $.ui.mount(BAND)
   const row = await ui.find({ type: 'Text', text: /adb 调用失败/ })
   expect(row?.text).toContain('adb not found')
   await ui.unmount()
 })
 
-test('starts reading from the first hint draw', async ($, on) => {
+test('starts reading from the first band draw', async ($, on) => {
   let calls = 0
   mocks(on, () => {
     calls += 1
@@ -100,7 +107,35 @@ test('starts reading from the first hint draw', async ($, on) => {
     }
   })
 
-  const ui = await $.ui.mount(HINT)
+  const ui = await $.ui.mount(BAND)
   expect(calls).toBeGreaterThan(0)
+  await ui.unmount()
+})
+
+test('the shot button captures and pulls a screenshot', async ($, on) => {
+  const calls: string[][] = []
+  mocks(on, (_: any, e: any) => {
+    calls.push([...e.argv])
+    return {
+      value: {
+        exitCode: 0,
+        stdout: e.argv.includes('devices') ? SAMPLE : '',
+        stderr: '',
+        isStdoutTruncated: false,
+        isStderrTruncated: false,
+      },
+    }
+  })
+  await $.session.start({ cwd: '/', surface: 'terminal', isInteractive: true })
+
+  const ui = await $.ui.mount(BAND)
+  await ui.press({ key: 'shot:SWHUIJB6PREEV46X' })
+
+  expect(calls.some(argv => argv.includes('screencap'))).toBe(true)
+  expect(
+    calls.some(
+      argv => argv.includes('pull') && argv.at(-1)?.startsWith('/home/tester/'),
+    ),
+  ).toBe(true)
   await ui.unmount()
 })
